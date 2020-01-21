@@ -20,7 +20,7 @@ public class Event {
     private String name;
     private String description;
     private LocalDateTime beginEnrollmentDatetime;
-    private LocalDateTime endEnrollmentDatetime;
+    private LocalDateTime closeEnrollmentDatetime;
     private LocalDateTime beginEventDateTime;
     private LocalDateTime endEventDateTime;
     private String location; // (optional) 이게 없으면 온라인 모임

@@ -37,7 +37,7 @@ public class EventControllerTests {
                 .name("Spring")
                 .description("rest api development with spring")
                 .beginEnrollmentDatetime(LocalDateTime.of(2020, 1, 21, 14, 20))
-                .endEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
+                .closeEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .beginEventDateTime(LocalDateTime.of(2020, 1, 21, 10, 0))
                 .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .basePrice(100)
@@ -67,7 +67,7 @@ public class EventControllerTests {
                 .name("Spring")
                 .description("rest api development with spring")
                 .beginEnrollmentDatetime(LocalDateTime.of(2020, 1, 21, 14, 20))
-                .endEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
+                .closeEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .beginEventDateTime(LocalDateTime.of(2020, 1, 21, 10, 0))
                 .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .basePrice(100)
@@ -90,6 +90,27 @@ public class EventControllerTests {
     @Test
     public void createEvent_Bad_Request_Empty_Input() throws Exception {
         EventDto eventDto = EventDto.builder().build();
+
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(eventDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void createEvent_Bad_Request_Wrong_Input() throws Exception {
+        EventDto eventDto = EventDto.builder()
+                .name("Spring")
+                .description("rest api development with spring")
+                .beginEnrollmentDatetime(LocalDateTime.of(2020, 1, 21, 14, 20))
+                .closeEnrollmentDatetime(LocalDateTime.of(2020, 1, 20, 15, 0))
+                .beginEventDateTime(LocalDateTime.of(2020, 1, 21, 10, 0))
+                .endEventDateTime(LocalDateTime.of(2020, 1, 20, 15, 0))
+                .basePrice(10000)
+                .maxPrice(200)
+                .limitOfEnrolment(100)
+                .location("강남역 D2 스타트업 팩토리")
+                .build();
 
         mockMvc.perform(post("/api/events")
                 .contentType(MediaType.APPLICATION_JSON)
