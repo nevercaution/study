@@ -34,5 +34,5 @@ public class EventDto {
     @Min(0)
     private int maxPrice;
     @Min(0)
-    private int limitOfEnrolment;
+    private int limitOfEnrollment;
 }

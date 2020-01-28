@@ -1,12 +1,15 @@
 package com.nevercaution.demoinflearnapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nevercaution.demoinflearnapi.common.RestDocsConfiguration;
 import com.nevercaution.demoinflearnapi.common.TestDescription;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,6 +18,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -23,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
+@Import(RestDocsConfiguration.class)
 public class EventControllerTests {
 
     @Autowired
@@ -43,7 +53,7 @@ public class EventControllerTests {
                 .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .basePrice(100)
                 .maxPrice(200)
-                .limitOfEnrolment(100)
+                .limitOfEnrollment(100)
                 .location("강남역 D2 스타트업 팩토리")
                 .build();
 
@@ -62,6 +72,53 @@ public class EventControllerTests {
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.query-events").exists())
                 .andExpect(jsonPath("_links.update-event").exists())
+                // for rest docs
+                .andDo(document("create-event",
+                        links(
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("query-events").description("link to query events"),
+                                linkWithRel("update-event").description("link to update an existing event")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        requestFields(
+                                fieldWithPath("name").description("name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDatetime").description("date time of new event"),
+                                fieldWithPath("closeEnrollmentDatetime").description("date time of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of new event")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("location header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("id of new event"),
+                                fieldWithPath("name").description("name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDatetime").description("date time of new event"),
+                                fieldWithPath("closeEnrollmentDatetime").description("date time of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of new event"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells this event is offline event or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+                                fieldWithPath("_links.self.href").description("link to self"),
+                                fieldWithPath("_links.query-events.href").description("link to query events"),
+                                fieldWithPath("_links.update-event.href").description("link to update event")
+                        )
+                ))
         ;
     }
 
@@ -78,7 +135,7 @@ public class EventControllerTests {
                 .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
                 .basePrice(100)
                 .maxPrice(200)
-                .limitOfEnrolment(100)
+                .limitOfEnrollment(100)
                 .location("강남역 D2 스타트업 팩토리")
                 .free(true)
                 .offline(false)
@@ -116,7 +173,7 @@ public class EventControllerTests {
                 .endEventDateTime(LocalDateTime.of(2020, 1, 20, 15, 0))
                 .basePrice(10000)
                 .maxPrice(200)
-                .limitOfEnrolment(100)
+                .limitOfEnrollment(100)
                 .location("강남역 D2 스타트업 팩토리")
                 .build();
 
