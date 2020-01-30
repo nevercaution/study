@@ -18,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
@@ -205,7 +206,7 @@ public class EventControllerTests {
         //Given
         IntStream.range(0, 30).forEach(this::generateEvent);
 
-        // When
+        // When & Then
         mockMvc.perform(get("/api/events")
                 .param("page", "1")
                 .param("size", "10")
@@ -227,12 +228,41 @@ public class EventControllerTests {
         ;
     }
 
-    private void generateEvent(int index) {
+    @Test
+    @TestDescription("기존의 이벤트를 하나 조회하기")
+    public void getEvent() throws Exception {
+        // Given
+        Event event = generateEvent(100);
+
+        // When & Then
+        mockMvc.perform(get("/api/events/{id}", event.getId()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                // TODO: document
+                .andDo(document("get-event"))
+        ;
+    }
+
+    @Test
+    @TestDescription("없는 이벤트는 조회했을 때 404 응답받기")
+    public void getEvent_404() throws Exception {
+        // When & Then
+        Random random = new Random();
+        mockMvc.perform(get("/api/events/{id}", random.nextInt()))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    private Event generateEvent(int index) {
         Event event = Event.builder()
                 .name("event " + index)
                 .description("test event")
                 .build();
 
-        eventRepository.save(event);
+        return eventRepository.save(event);
     }
 }
