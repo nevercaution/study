@@ -37,7 +37,7 @@ public class AppConfig {
             public void run(ApplicationArguments args) throws Exception {
                 Account account = Account.builder()
                         .email("nevercaution@email.com")
-                        .password("password")
+                        .password("teddy")
                         .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                         .build();
                 accountService.saveAccount(account);
