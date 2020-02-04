@@ -3,6 +3,7 @@ package com.nevercaution.demoinflearnapi.configure;
 import com.nevercaution.demoinflearnapi.accounts.Account;
 import com.nevercaution.demoinflearnapi.accounts.AccountRole;
 import com.nevercaution.demoinflearnapi.accounts.AccountService;
+import com.nevercaution.demoinflearnapi.common.AppProperties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -33,14 +34,24 @@ public class AppConfig {
             @Autowired
             private AccountService accountService;
 
+            @Autowired
+            private AppProperties appProperties;
+
             @Override
             public void run(ApplicationArguments args) throws Exception {
-                Account account = Account.builder()
-                        .email("nevercaution@email.com")
-                        .password("teddy")
+                Account admin = Account.builder()
+                        .email(appProperties.getAdminUsername())
+                        .password(appProperties.getAdminPassword())
                         .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                         .build();
-                accountService.saveAccount(account);
+                accountService.saveAccount(admin);
+
+                Account user = Account.builder()
+                        .email(appProperties.getUserUsername())
+                        .password(appProperties.getUserPassword())
+                        .roles(Set.of(AccountRole.USER))
+                        .build();
+                accountService.saveAccount(user);
             }
         };
     }

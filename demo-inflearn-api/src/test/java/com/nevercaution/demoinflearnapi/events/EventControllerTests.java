@@ -4,6 +4,7 @@ import com.nevercaution.demoinflearnapi.accounts.Account;
 import com.nevercaution.demoinflearnapi.accounts.AccountRepository;
 import com.nevercaution.demoinflearnapi.accounts.AccountRole;
 import com.nevercaution.demoinflearnapi.accounts.AccountService;
+import com.nevercaution.demoinflearnapi.common.AppProperties;
 import com.nevercaution.demoinflearnapi.common.BaseControllerTest;
 import com.nevercaution.demoinflearnapi.common.TestDescription;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,9 @@ public class EventControllerTests extends BaseControllerTest {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    private AppProperties appProperties;
 
     @Before
     public void setUp() {
@@ -372,24 +376,19 @@ public class EventControllerTests extends BaseControllerTest {
 
     public String getAccessToken() throws Exception {
 
-        String username = "teddy@email.com";
-        String password = "teddy";
         Account account = Account.builder()
-                .email(username)
-                .password(password)
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
                 .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                 .build();
 
         accountService.saveAccount(account);
 
-        final String clientId = "myApp";
-        final String clientSecret = "pass";
-
         ResultActions perform = mockMvc.perform(post("/oauth/token")
                 // header 에 정보를 담아서 전달
-                .with(httpBasic(clientId, clientSecret))
-                .param("username", username)
-                .param("password", password)
+                .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                .param("username", appProperties.getUserUsername())
+                .param("password", appProperties.getUserPassword())
                 .param("grant_type", "password"));
 
         String responseBody = perform.andReturn().getResponse().getContentAsString();
