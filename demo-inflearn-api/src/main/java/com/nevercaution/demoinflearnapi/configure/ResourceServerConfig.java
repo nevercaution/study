@@ -28,12 +28,14 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .and()
             .authorizeRequests()
                 .mvcMatchers(HttpMethod.GET, "/api/**")
-                    .anonymous()
+                    .permitAll()
                 .anyRequest()
                     .authenticated()
                 .and()
             .exceptionHandling()
                 .accessDeniedHandler(new OAuth2AccessDeniedHandler());
 
+        // .anonymous() 와 permitAll() 의 차이점은
+        // anonymous 는 인증이 안된 상태에서만 접근이 가능하다. 즉 인증을 하면 접근을 할 수 없다.
     }
 }
