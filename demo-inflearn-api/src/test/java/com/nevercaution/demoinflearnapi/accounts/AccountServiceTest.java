@@ -1,6 +1,7 @@
 package com.nevercaution.demoinflearnapi.accounts;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -33,6 +34,14 @@ public class AccountServiceTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @After
+    public void cleanUp() {
+        accountRepository.deleteAll();
+    }
 
     @Test
     public void findByUserName() {

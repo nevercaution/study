@@ -141,7 +141,11 @@ public class EventControllerTests extends BaseControllerTest {
     }
 
     private String getBearerToken() throws Exception {
-        return "Bearer " + getAccessToken();
+        return getBearerToken(true);
+    }
+
+    private String getBearerToken(boolean needCreatedAccount) throws Exception {
+        return "Bearer " + getAccessToken(needCreatedAccount);
     }
 
     @Test
@@ -247,7 +251,8 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("기존의 이벤트를 하나 조회하기")
     public void getEvent() throws Exception {
         // Given
-        Event event = generateEvent(100);
+        Account account = createAccount();
+        Event event = generateEvent(100, account);
 
         // When & Then
         mockMvc.perform(get("/api/events/{id}", event.getId()))
@@ -266,18 +271,19 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("기존의 이벤트를 하나 조회하기")
     public void getEvent_With_Authentication() throws Exception {
         // Given
-        Event event = generateEvent(100);
+        Account account = createAccount();
+        Event event = generateEvent(100, account);
 
         // When & Then
         mockMvc.perform(get("/api/events/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken()))
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(false)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name").exists())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                .andExpect(jsonPath("_links.create-event").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
                 // TODO: document
                 .andDo(document("get-event"))
         ;
@@ -297,7 +303,8 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("이벤트를 정상적으로 수정하기")
     public void updateEvent() throws Exception {
         // Given
-        Event event = generateEvent(200);
+        Account account = createAccount();
+        Event event = generateEvent(200, account);
 
         EventDto eventDto = modelMapper.map(event, EventDto.class);
         String eventName = "Updating Event";
@@ -305,7 +312,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         // When & Then
         mockMvc.perform(put("/api/events/{id}", event.getId())
-                    .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                    .header(HttpHeaders.AUTHORIZATION, getBearerToken(false))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaTypes.HAL_JSON)
                     .content(objectMapper.writeValueAsString(eventDto)))
@@ -375,35 +382,41 @@ public class EventControllerTests extends BaseControllerTest {
         ;
     }
 
-    private Event generateEvent(int index) {
-        Event event = Event.builder()
-                .name("event " + index)
-                .description("test event")
-                .beginEnrollmentDatetime(LocalDateTime.of(2020, 1, 21, 14, 20))
-                .closeEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
-                .beginEventDateTime(LocalDateTime.of(2020, 1, 21, 10, 0))
-                .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
-                .basePrice(100)
-                .maxPrice(200)
-                .limitOfEnrollment(100)
-                .location("강남역 D2 스타트업 팩토리")
-                .free(false)
-                .offline(true)
-                .eventStatus(EventStatus.DRAFT)
-                .build();
-
+    private Event generateEvent(int index, Account account) {
+        Event event = buildEvent(index);
+        event.setManager(account);
         return eventRepository.save(event);
     }
 
-    public String getAccessToken() throws Exception {
+    private Event generateEvent(int index) {
+        Event event = buildEvent(index);
+        return eventRepository.save(event);
+    }
 
-        Account account = Account.builder()
-                .email(appProperties.getUserUsername())
-                .password(appProperties.getUserPassword())
-                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
-                .build();
+    private Event buildEvent(int index) {
+        return Event.builder()
+                    .name("event " + index)
+                    .description("test event")
+                    .beginEnrollmentDatetime(LocalDateTime.of(2020, 1, 21, 14, 20))
+                    .closeEnrollmentDatetime(LocalDateTime.of(2020, 1, 22, 15, 0))
+                    .beginEventDateTime(LocalDateTime.of(2020, 1, 21, 10, 0))
+                    .endEventDateTime(LocalDateTime.of(2020, 1, 22, 15, 0))
+                    .basePrice(100)
+                    .maxPrice(200)
+                    .limitOfEnrollment(100)
+                    .location("강남역 D2 스타트업 팩토리")
+                    .free(false)
+                    .offline(true)
+                    .eventStatus(EventStatus.DRAFT)
+                    .build();
+    }
 
-        accountService.saveAccount(account);
+    public String getAccessToken(boolean needCreatedAccount) throws Exception {
+
+        // Given
+        if (needCreatedAccount) {
+            createAccount();
+        }
 
         ResultActions perform = mockMvc.perform(post("/oauth/token")
                 // header 에 정보를 담아서 전달
@@ -415,5 +428,15 @@ public class EventControllerTests extends BaseControllerTest {
         String responseBody = perform.andReturn().getResponse().getContentAsString();
         Jackson2JsonParser parser = new Jackson2JsonParser();
         return parser.parseMap(responseBody).get("access_token").toString();
+    }
+
+    private Account createAccount() {
+        Account account = Account.builder()
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
+                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+                .build();
+
+        return accountService.saveAccount(account);
     }
 }
