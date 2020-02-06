@@ -263,6 +263,27 @@ public class EventControllerTests extends BaseControllerTest {
     }
 
     @Test
+    @TestDescription("기존의 이벤트를 하나 조회하기")
+    public void getEvent_With_Authentication() throws Exception {
+        // Given
+        Event event = generateEvent(100);
+
+        // When & Then
+        mockMvc.perform(get("/api/events/{id}", event.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andExpect(jsonPath("_links.create-event").exists())
+                // TODO: document
+                .andDo(document("get-event"))
+        ;
+    }
+
+    @Test
     @TestDescription("없는 이벤트는 조회했을 때 404 응답받기")
     public void getEvent_404() throws Exception {
         // When & Then
